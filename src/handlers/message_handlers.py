@@ -3,6 +3,7 @@ from telegram import Update, InputFile
 from telegram.ext import ContextTypes
 from src.config import Config
 from src.services.file_service import file_service
+from src.processors.image_processor import ImageProcessor
 
 
 
@@ -75,8 +76,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     try:
         file_path, file_name = await file_service.download_photo(photo=photo)
+        processor = ImageProcessor()
+        texts = await processor.extract_text(file_path)
         
-        print(file_path)
+        print(texts)
         
     except Exception as e:
         logger.error(f"Error processing document: {e}")

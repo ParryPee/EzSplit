@@ -3,6 +3,8 @@ from typing import Dict, Any, Optional, List
 import tempfile
 import os
 import logging
+from src.config import Config
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,11 @@ class BaseProcessor(ABC):
         
         pass
     
+    @abstractmethod
+    async def split_bill(self, file_path: str)-> bool:
+        pass
+
+
     async def create_temp_file(self, original_filename: str) -> str:
         """Create a temporary file for processing"""
         temp_dir = os.path.join(os.getcwd(), 'temp')
@@ -29,6 +36,11 @@ class BaseProcessor(ABC):
         )
         temp_file.close()
         return temp_file.name
+
+    def validate_file_size(self, file_size: int) -> bool:
+        """Validate file size is within limits"""
+        
+        return file_size <= Config.MAX_FILE_SIZE_MB
     
     def cleanup_temp_file(self, file_path: str) -> None:
         """Clean up temporary file"""

@@ -46,7 +46,7 @@ def main() -> None:
         
         # Start the bot
         app.run_polling(allowed_updates=["message"])
-        
+
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
         print(f"\n❌ Configuration Error: {e}")
