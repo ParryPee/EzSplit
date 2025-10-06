@@ -16,7 +16,7 @@ class Config:
     # Bot Settings
     MAX_FILE_SIZE_MB = int(os.getenv('MAX_FILE_SIZE_MB', '20'))
     SUPPORTED_FORMATS = os.getenv('SUPPORTED_FORMATS', 'jpg,jpeg,png').split(',')
-    TESSERACT_PATH = os.getenv("TESSERACT_PATH", "C:\Program Files\Tesseract-OCR\\tesseract.exe")
+    ASPRISED_URL = os.getenv("ASPRISED_URL", "https://ocr.asprise.com/api/v1/receipt")
     
     DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 

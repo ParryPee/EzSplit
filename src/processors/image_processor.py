@@ -6,9 +6,10 @@ import os
 from typing import Dict, Any, List
 from .base_processor import BaseProcessor
 from src.config import Config
-import pytesseract
 from PIL import Image, ImageEnhance,ImageFilter
 import cv2
+import numpy as np
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -21,39 +22,25 @@ class ImageProcessor(BaseProcessor):
     async def extract_text(self, file_path: str) -> str:
         
         try:
-            pytesseract.pytesseract.tesseract_cmd = fr'{Config.TESSERACT_PATH}'
-            processed_image = self.preprocess_image(file_path)
-            data = pytesseract.image_to_data(processed_image,output_type=pytesseract.Output.DICT)
+            r = requests.post(Config.ASPRISED_URL,
+                              headers={
+                                    'accept': 'application/json'},
+                              files={"file": open(file_path,"rb")})
+            result = r.json()
             
-            texts = data['text']
-            confidence = data['conf']
-            # Filter out empty text entries and pair them with confidence
-            results = [(text, int(conf)) for text, conf in zip(texts, confidence) if text.strip() != '' and int(conf) > 0]
-            print(results)
+            self.cleanup_temp_file(file_path)
+            
+            if(not result['success']):
+                return False
+            else:
+                return result['receipts'][0]
+            
         except Exception as e:
             logger.error(f"Error extracting text from image: {e}")
             raise Exception(f"Failed to extract text from image: {str(e)}")
     
-    async def split_bill(self, file_path):
-        return await super().split_bill(file_path)
+    async def split_bill(self, data):
+        return await super().split_bill(data)
     
-    
-    def preprocess_image(self, image_path):
-        # Load grayscale image
-        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-        # Upscale image (e.g., 2x)
-        upscaled = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-
-        # Convert to PIL for enhancing
-        pil_img = Image.fromarray(upscaled)
-
-        # Slightly sharpen image
-        sharpened = pil_img.filter(ImageFilter.UnsharpMask(radius=2, percent=150, threshold=3))
-
-        # Enhance contrast
-        enhancer = ImageEnhance.Contrast(sharpened)
-        enhanced_img = enhancer.enhance(1.5)
-
-        return enhanced_img
 

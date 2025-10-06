@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, InputFile
+from telegram import Update, InputFile,InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from src.config import Config
 from src.services.file_service import file_service
@@ -79,8 +79,27 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         processor = ImageProcessor()
         texts = await processor.extract_text(file_path)
         
-        print(texts)
+        if not texts:
+            await processing_msg.edit_text("❌ Error processing document. Please try again. Ensure photo quality is as good as possible.")
+        elif texts['ocr_confidence'] < 75:
+            await processing_msg.edit_text(f"Receipt quality is not good enough. Please try again with a higher quality picture!")
+        else:
+            context.user_data['ocr_text'] = texts['ocr_text']
+            context.user_data['ocr_confidence'] = texts['ocr_confidence']
+            context.user_data['file_path'] = file_path
+            keyboard = [
+                [InlineKeyboardButton("✅ Correct", callback_data='confirm_ocr')],
+                [InlineKeyboardButton("✏️ Edit", callback_data='edit_ocr')]
+            ]
+            await processing_msg.edit_text(
+                text=f"Receipt scanned!\nPlease check and make sure the details below are correct:\n" +
+                     "============================\n\n" +
+                     f"{texts['ocr_text']}\n\n" +
+                     "Is this information correct?",
+                reply_markup=keyboard
+            )
         
+                
     except Exception as e:
         logger.error(f"Error processing document: {e}")
         await processing_msg.edit_text(

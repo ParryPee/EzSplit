@@ -20,7 +20,7 @@ class BaseProcessor(ABC):
         pass
     
     @abstractmethod
-    async def split_bill(self, file_path: str)-> bool:
+    async def split_bill(self, receipt_data: str)-> bool:
         pass
 
 

@@ -1,5 +1,5 @@
 import logging
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from src.config import Config
 from src.handlers.message_handlers import (
     start_command,
@@ -8,6 +8,7 @@ from src.handlers.message_handlers import (
     handle_unknown,
     error_handler
 )
+from src.handlers.callback_handler import handle_ocr_callback
 
 
 logging.basicConfig(
@@ -30,6 +31,10 @@ def main() -> None:
         app.add_handler(CommandHandler("start", start_command))
         app.add_handler(CommandHandler("help", help_command))
         
+        #Add callback handler
+        app.add_handler(CallbackQueryHandler(handle_ocr_callback))
+
+        
         # Add message handlers
         app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
         
@@ -45,7 +50,7 @@ def main() -> None:
         logger.info("Bot setup complete. Starting polling...")
         
         # Start the bot
-        app.run_polling(allowed_updates=["message"])
+        app.run_polling(allowed_updates=["message","callback_query"])
 
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
