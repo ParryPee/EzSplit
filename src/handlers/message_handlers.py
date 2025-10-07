@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, InputFile,InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes,ConversationHandler
 from src.config import Config
 from src.services.file_service import file_service
 from src.processors.image_processor import ImageProcessor
@@ -58,15 +58,22 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         help_message,
         parse_mode='Markdown'
     )
+async def split_command(update: Update, context: ContextTypes.DEFAULT_TYPE)->int:
+    await update.message.reply_text("🖼️Please send a receipt image to split.🖼️")
+    return Config.WAITING_FOR_IMAGE
     
+async def cancel_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❌Operation Cancelled.❌")
+    return ConversationHandler.END
     
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    photo = update.message.photo[-1]
+    photo =  update.message.photo
 
     if not photo:
-        await update.message.reply_text("❌ No photo received. Please try again.")
+        await update.message.reply_text("❌ No photo received. Please try again with an image of the receipt with the caption /split")
         return
-    
+    else:
+        photo = photo[-1]
         
 
     processing_msg = await update.message.reply_text(
@@ -85,6 +92,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             await processing_msg.edit_text(f"Receipt quality is not good enough. Please try again with a higher quality picture!")
         else:
             context.user_data['ocr_text'] = texts['ocr_text']
+            context.user_data['items'] = texts['items']
             context.user_data['ocr_confidence'] = texts['ocr_confidence']
             context.user_data['file_path'] = file_path
             keyboard = [
@@ -96,7 +104,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                      "============================\n\n" +
                      f"{texts['ocr_text']}\n\n" +
                      "Is this information correct?",
-                reply_markup=keyboard
+                reply_markup=InlineKeyboardMarkup(keyboard)
             )
         
                 

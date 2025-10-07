@@ -1,15 +1,19 @@
 import logging
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler,ConversationHandler 
 from src.config import Config
 from src.handlers.message_handlers import (
     start_command,
     help_command,
+    split_command,
+    cancel_upload,
     handle_photo,
     handle_unknown,
     error_handler
 )
-from src.handlers.callback_handler import handle_ocr_callback
 
+
+
+from src.handlers.callback_handler import handle_ocr_callback
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -34,10 +38,17 @@ def main() -> None:
         #Add callback handler
         app.add_handler(CallbackQueryHandler(handle_ocr_callback))
 
-        
-        # Add message handlers
-        app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-        
+        #Add conversation handlers
+        conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('split', split_command)],
+        states={
+            Config.WAITING_FOR_IMAGE: [
+                MessageHandler(filters.PHOTO, handle_photo)
+            ]
+        },
+        fallbacks=[CommandHandler('cancel', cancel_upload)]
+    )
+        app.add_handler(conv_handler)
         # Handle unknown message types
         app.add_handler(MessageHandler(
             ~(filters.COMMAND | filters.Document.ALL | filters.PHOTO), 

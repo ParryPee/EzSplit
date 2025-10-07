@@ -23,6 +23,9 @@ class Config:
     # Censoring Settings
     CONFIDENCE_THRESHOLD = float(os.getenv('CONFIDENCE_THRESHOLD', '0.8'))
 
+    #States
+    WAITING_FOR_IMAGE = os.getenv("WAITING_FOR_IMAGE", 1)
+    
     @classmethod
     def validate(cls):
         """Validate required configuration"""

@@ -5,6 +5,10 @@ async def handle_ocr_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()  # Acknowledge the button press
     
+    ocr_text = context.user_data['ocr_text']
+    
+    
+    
     if query.data == 'confirm_ocr':
         # User confirmed the OCR text
         await query.edit_message_text(text=f"✓ Confirmed!\n\n")
